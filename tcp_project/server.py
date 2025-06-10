@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import sys
+import hashlib
 
 """"
 Protocolo de aplicação sugerido pelos alunos:
@@ -14,6 +15,8 @@ Cada mensagem deve ser precedida do seguinte cabeçalho:
 No caso de uma mensagem de arquivo, o cabeçalho deve ser:
 +---------------------------+
 | Tipo da msg               |
++---------------------------+
+| Tamanho em bytes do nome  |
 +---------------------------+
 | Nome do arquivo           |
 +---------------------------+
@@ -70,6 +73,7 @@ class Server:
 
     def handle_request(self, message, client_socket): 
         if message == "sair":
+            print("Operação 'Sair'")
             with self.lock:
                 self.client_sockets.remove(client_socket)
             client_socket.close()
@@ -78,39 +82,51 @@ class Server:
         
         if message.startswith("arquivo "):
             filename = message.split(" ", 1)[1]
+            print(f"Operação 'Arquivo' com arquivo: {filename}")
             try:
                 with open(filename, 'rb') as f:
                     file_size = os.path.getsize(filename)
+                    print(f"Tamanho do arquivo: {file_size} bytes")
                     current_size = 0
-                    header_size = 128 + 4 + 1
-                    while current_size < file_size:
+                    header_size = 1 + len(filename) + 4 + 1
+                    full_content = b''
+                    while current_size != file_size:
                         data = f.read(1024 - header_size)
+                        full_content += data
                         current_size += len(data)
                         self.send_message(1, data, filename, file_size, client_socket=client_socket)
+                    filehash = hashlib.sha256()  
+                    filehash.update(full_content)
+                    client_socket.sendall(filehash.digest())
                     print(f"Arquivo {filename} enviado para o cliente.")
             except FileNotFoundError:
                 print(f"Arquivo {filename} não encontrado.")
-                client_socket.sendall(b"Arquivo nao encontrado.")
+                client_socket.sendall(b"0Arquivo nao encontrado.")
                 
         elif message.startswith("chat "):
             chat_message = message.split(" ", 1)[1]
+            print(f"Operação 'Chat' com mensagem: {chat_message}")
             with self.lock:
                 for sock in self.client_sockets:
                     if sock != client_socket:
                         try:
+                            # sock.sendall(chat_message.encode())
                             self.send_message(type=0, content=chat_message, client_socket=sock)
                         except Exception as e:
                             print(f"Erro ao enviar mensagem para o cliente: {e}")
         else:
-            client_socket.sendall(b"Operacao desconhecida.")
+            print(f"Operação desconhecida: {message}")
+            client_socket.sendall(b"0Operacao desconhecida.")
 
-    def send_message(self, type =0, content="", filename="", file_size=0, client_socket=None):
+    def send_message(self, type =0, content=b"", filename="", file_size=0, client_socket=None):
         if type == 0:
             header = f"0"
             message = header.encode() + content.encode()
         elif type == 1:
-            header = f"1{filename:<128}{file_size:<4}"
-            message = header.encode() + content
+            # file_size deve ser convertido para um inteiro de 4 bytes
+            len_filename_b = len(filename).to_bytes(1, 'big', signed=False)  # Tamanho do nome do arquivo como um byte
+            file_size_b = file_size.to_bytes(4, 'big', signed=False)
+            message = f"1".encode() + len_filename_b + filename.encode() + file_size_b + content
         else:
             print("Tipo de mensagem desconhecido.")
             return
@@ -120,6 +136,7 @@ class Server:
                 # print(f"Mensagem enviada: {message.decode()}")
             except Exception as e:
                 print(f"Erro ao enviar mensagem: {e}")
+                # pass
 
     def handle_client(self, client_socket):
         while self.running:
