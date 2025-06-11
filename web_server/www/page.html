@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Simple Web Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav {
+            background-color: #555;
+            overflow: hidden;
+        }
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #777;
+        }
+        .container {
+            padding: 2rem;
+        }
+        .highlight {
+            color: #333;
+            background-color: #ffefc1;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 1rem;
+            border-radius: 8px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to My Web Page</h1>
+    </header>
+
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">Gallery</a>
+        <a href="#">Contact</a>
+    </nav>
+
+    <div class="container">
+        <h2>About This Page</h2>
+        <p>This is a demo page served by a Python socket-based HTTP server.</p>
+
+        <div class="highlight">
+            <p>Hello from Python! This page was sent via a custom-built HTTP server.</p>
+        </div>
+
+        <img src="/image.jpeg" alt="Sample Image">
+
+        <p>
+            <button onclick="sayHello()">!</button>
+        </p>
+    </div>
+
+    <footer>
+        &copy; 2025 My Web Server
+    </footer>
+
+    <script>
+        function sayHello() {
+            alert("Hello from JavaScript!");
+        }
+    </script>
+</body>
+</html>
